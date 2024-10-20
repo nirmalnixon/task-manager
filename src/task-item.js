@@ -17,7 +17,7 @@ const TaskItem = ({ task, index, completeTask, deleteTask }) => {
       <p>Priority: {task.priority}</p>
       <p>Due Date: {task.dueDate}</p>
       <p>Created by {createdBy}</p>
-      {showDelete && <button onClick={() => deleteTask(index)} className={styles.deleteBtn}>X</button>}
+      {showDelete && <button onClick={() => deleteTask(task._id)} className={styles.deleteBtn}>X</button>}
       {!task.completed && (
         <button onClick={() => completeTask(index)}>Mark as Completed</button>
       )}

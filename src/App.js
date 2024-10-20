@@ -1,6 +1,8 @@
 import React, { useState, useEffect, createContext } from 'react';
 import styles from './App.module.css'
 import TaskItem from './task-item'
+import axios from 'axios';
+
 
 export const TaskContext = createContext();
 
@@ -13,7 +15,7 @@ function App() {
   const [taskList, setTaskList] = useState([]);
   const [taskInput, setTaskInput] = useState({ title: '', priority: 'Medium', dueDate: '' });
 
-    // Wrap the app in ThemeContext.Provider to share theme globally. 
+  // Wrap the app in ThemeContext.Provider to share theme globally. 
 
   const [theme, setTheme] = useState('light');
 
@@ -21,19 +23,18 @@ function App() {
 
   // Load saved tasks when the component mounts.
   useEffect(() => {
-    const savedTasks = JSON.parse(localStorage.getItem('tasks'));
-    if (savedTasks) { 
-      setTaskList(savedTasks);
-    }
+    getTaskList()
   }, []);
-
-  // Use useEffect to sync tasks with localStorage
-  useEffect(() => {
-    localStorage.setItem('tasks', JSON.stringify(taskList));
-  }, [taskList]);
 
   // Updates localStorage every time taskList changes.
 
+  const getTaskList = () => {
+    axios.get('http://localhost:5000/tasks')
+      .then(response => {
+        setTaskList(response.data)
+      })
+      .catch(error => console.error(error));
+  }
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -53,7 +54,9 @@ function App() {
   // Function to add a new task when the button is clicked.
   const addTask = () => {
     if (taskInput.title && taskInput.dueDate) {
-      setTaskList([...taskList, { ...taskInput, completed: false }]);
+      axios.post('http://localhost:5000/tasks', taskInput)
+        .then(response => { setTaskList([...taskList, response.data]) })
+        .catch(error => console.error(error));
       setTaskInput({ title: '', priority: 'Medium', dueDate: '' }); // Reset form
     }
 
@@ -62,27 +65,17 @@ function App() {
   // Adds a new task with title, priority, and due date.​
 
   // Add two functions to sort tasks by priority and due date.
-  
+
   const sortTasksByPriority = () => {
-    const sortedTasks = [...taskList].sort((a, b) => {
-      const priorities = { High: 3, Medium: 2, Low: 1 };
-      return priorities[b.priority] - priorities[a.priority];
-    });
-    setTaskList(sortedTasks);
+    axios.get('http://localhost:5000/tasks/SortBy/Priority')
+      .then(response => setTaskList(response.data))
+      .catch(error => console.error(error));
   };
 
   const sortTasksByDueDate = () => {
-    const sortedTasks = [...taskList].sort((a, b) => {
-
-
-      var a = new Date(a.dueDate);
-      var b = new Date(b.dueDate);
-
-      var x=a.valueOf();
-
-      return a - b;
-    });
-    setTaskList(sortedTasks);
+    axios.get('http://localhost:5000/tasks/SortBy/DueDate')
+      .then(response => setTaskList(response.data))
+      .catch(error => console.error(error));
   };
 
   // sortTasksByPriority: Sorts by high, medium, and low.​
@@ -97,11 +90,14 @@ function App() {
     setTaskList(updatedTasks);
   };
 
-  const deleteTask = (index) => {
-    const updatedTasks = taskList.filter((_, i) => i !== index);
-    setTaskList(updatedTasks);
+  const deleteTask = (id) => {
+    axios.delete(`http://localhost:5000/tasks/${id}`)
+      .then(response => {
+        console.log(response.data);
+        //getTaskList();
+      })
+      .catch(error => console.error(error));
   };
-
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
